@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAM Optimizer Pro</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      padding: 20px 0;
+      background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+      color: white;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .header p {
+      margin: 5px 0 0;
+      opacity: 0.9;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      color: #3a7bd5;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+
+    .memory-info {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .memory-item {
+      flex: 1;
+      min-width: 150px;
+      margin: 10px;
+      text-align: center;
+    }
+
+    .memory-item .value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #3a7bd5;
+    }
+
+    .memory-item .label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .progress-bar {
+      height: 20px;
+      background-color: #eee;
+      border-radius: 10px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+
+    .progress-bar-inner {
+      height: 100%;
+      background: linear-gradient(90deg, #4CAF50, #8BC34A);
+      border-radius: 10px;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .button {
+      display: inline-block;
+      background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 12px 24px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .button:hover {
+      background: linear-gradient(135deg, #2d68b2, #00b8e0);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .process-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .process-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .process-item:last-child {
+      border-bottom: none;
+    }
+
+    .process-name {
+      font-weight: bold;
+    }
+
+    .process-memory {
+      color: #3a7bd5;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .loading-spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3a7bd5;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    .result {
+      display: none;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .success {
+      background-color: #dff0d8;
+      color: #3c763d;
+    }
+
+    .error {
+      background-color: #f2dede;
+      color: #a94442;
+    }
+
+    canvas#memoryChart {
+      width: 100%;
+      height: 200px;
+      margin: 20px 0;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      .memory-item {
+        min-width: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>RAM Optimizer Pro</h1>
+      <p>Free up memory and optimize system performance</p>
+    </div>
+
+    <div class="card">
+      <h2>System Information</h2>
+      <div class="memory-info">
+        <div class="memory-item">
+          <div class="value" id="total-ram">--</div>
+          <div class="label">Total RAM</div>
+        </div>
+        <div class="memory-item">
+          <div class="value" id="used-ram">--</div>
+          <div class="label">Used RAM</div>
+        </div>
+        <div class="memory-item">
+          <div class="value" id="free-ram">--</div>
+          <div class="label">Free RAM</div>
+        </div>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress-bar-inner" id="ram-usage-bar"></div>
+      </div>
+
+      <div class="center">
+        <button id="optimize-btn" class="button">Optimize RAM</button>
+      </div>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="loading-spinner"></div>
+      <p>Optimizing RAM... This may take a few moments.</p>
+    </div>
+
+    <div class="result" id="result"></div>
+
+    <div class="card">
+      <h2>Memory Usage</h2>
+      <canvas id="memoryChart"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>Top Memory Consumers</h2>
+      <ul class="process-list" id="process-list">
+        <li class="process-item">
+          <span class="process-name">Loading...</span>
+          <span class="process-memory">--</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Make the electron module available
+    const { ipcRenderer } = require('electron');
+
+    // DOM Elements
+    const totalRamEl = document.getElementById('total-ram');
+    const usedRamEl = document.getElementById('used-ram');
+    const freeRamEl = document.getElementById('free-ram');
+    const ramUsageBarEl = document.getElementById('ram-usage-bar');
+    const optimizeBtn = document.getElementById('optimize-btn');
+    const loadingEl = document.getElementById('loading');
+    const resultEl = document.getElementById('result');
+    const processListEl = document.getElementById('process-list');
+
+    // Memory Chart
+    let memoryChart;
+    let memoryData = [];
+    const maxDataPoints = 10;
+
+    // Format bytes to human-readable format
+    function formatBytes(bytes, decimals = 2) {
+      if (bytes === 0) return '0 Bytes';
+
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    // Initialize memory chart
+    function initMemoryChart() {
+      const ctx = document.getElementById('memoryChart').getContext('2d');
+
+      memoryChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array(maxDataPoints).fill(''),
+          datasets: [{
+            label: 'Used RAM',
+            data: Array(maxDataPoints).fill(null),
+            borderColor: '#3a7bd5',
+            backgroundColor: 'rgba(58, 123, 213, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Memory (GB)'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Time'
+              }
+            }
+          },
+          animation: {
+            duration: 500
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            }
+          }
+        }
+      });
+    }
+
+    // Update memory chart with new data
+    function updateMemoryChart(usedMemGB) {
+      const now = new Date();
+      const timeLabel = now.getHours().toString().padStart(2, '0') + ':' +
+                      now.getMinutes().toString().padStart(2, '0') + ':' +
+                      now.getSeconds().toString().padStart(2, '0');
+
+      memoryData.push({
+        time: timeLabel,
+        value: usedMemGB
+      });
+
+      // Keep only the last maxDataPoints
+      if (memoryData.length > maxDataPoints) {
+        memoryData.shift();
+      }
+
+      // Update chart data
+      memoryChart.data.labels = memoryData.map(d => d.time);
+      memoryChart.data.datasets[0].data = memoryData.map(d => d.value);
+      memoryChart.update();
+    }
+
+    // Get system info and update UI
+    async function updateSystemInfo() {
+      try {
+        const sysInfo = await ipcRenderer.invoke('get-system-info');
+
+        // Update system info
+        const totalRAM = formatBytes(sysInfo.totalMem);
+        const usedRAM = formatBytes(sysInfo.usedMem);
+        const freeRAM = formatBytes(sysInfo.freeMem);
+
+        totalRamEl.textContent = totalRAM;
+        usedRamEl.textContent = usedRAM;
+        freeRamEl.textContent = freeRAM;
+
+        // Update progress bar
+        const ramUsagePercentage = (sysInfo.usedMem / sysInfo.totalMem) * 100;
+        ramUsageBarEl.style.width = `${ramUsagePercentage}%`;
+
+        // Update chart if initialized
+        if (memoryChart) {
+          const usedMemGB = sysInfo.usedMem / (1024 * 1024 * 1024);
+          updateMemoryChart(usedMemGB);
+        }
+
+        // Update process list
+        updateProcessList();
+      } catch (error) {
+        console.error('Error updating system info:', error);
+      }
+    }
+
+    // Update process list
+    async function updateProcessList() {
+      try {
+        const detailedInfo = await ipcRenderer.invoke('get-detailed-memory');
+
+        if (detailedInfo.error) {
+          console.error('Error getting process info:', detailedInfo.error);
+          return;
+        }
+
+        // Clear existing list
+        processListEl.innerHTML = '';
+
+        // Add top processes
+        detailedInfo.topProcesses.forEach(proc => {
+          const li = document.createElement('li');
+          li.className = 'process-item';
+
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'process-name';
+          nameSpan.textContent = proc.name || 'Unknown Process';
+
+          const memorySpan = document.createElement('span');
+          memorySpan.className = 'process-memory';
+          memorySpan.textContent = proc.memoryUsage + ' MB';
+
+          li.appendChild(nameSpan);
+          li.appendChild(memorySpan);
+          processListEl.appendChild(li);
+        });
+      } catch (error) {
+        console.error('Error updating process list:', error);
+      }
+    }
+
+    // Optimize RAM function
+    async function optimizeRAM() {
+      try {
+        // Show loading indicator
+        loadingEl.style.display = 'block';
+        resultEl.style.display = 'none';
+        optimizeBtn.disabled = true;
+
+        // Call the optimize-ram function
+        const result = await ipcRenderer.invoke('optimize-ram');
+
+        // Hide loading indicator
+        loadingEl.style.display = 'none';
+        optimizeBtn.disabled = false;
+
+        // Show result
+        resultEl.style.display = 'block';
+
+        if (result.error) {
+          resultEl.className = 'result error';
+          resultEl.textContent = `Error: ${result.error}`;
+        } else {
+          const memoryFreedMB = Math.round(result.memoryFreed / (1024 * 1024));
+          resultEl.className = 'result success';
+          resultEl.textContent = `Successfully optimized RAM! ${memoryFreedMB} MB available.`;
+
+          // Update system info after optimization
+          updateSystemInfo();
+        }
+      } catch (error) {
+        console.error('Error during RAM optimization:', error);
+
+        // Hide loading indicator
+        loadingEl.style.display = 'none';
+        optimizeBtn.disabled = false;
+
+        // Show error
+        resultEl.style.display = 'block';
+        resultEl.className = 'result error';
+        resultEl.textContent = `Error: ${error.message || 'Unknown error'}`;
+      }
+    }
+
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Initialize memory chart
+      initMemoryChart();
+
+      // Update system info initially
+      await updateSystemInfo();
+
+      // Set up event listeners
+      optimizeBtn.addEventListener('click', optimizeRAM);
+
+      // Set interval to update system info every 5 seconds
+      setInterval(updateSystemInfo, 5000);
+    });
+  </script>
+</body>
+</html>

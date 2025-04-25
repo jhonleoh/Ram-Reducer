@@ -1,0 +1,30 @@
+appId: com.ramoptimizer.app
+productName: RAM Optimizer Pro
+copyright: Copyright © 2025
+directories:
+  output: dist
+  buildResources: assets
+files:
+  - main.js
+  - index.html
+  - assets/**/*
+  - package.json
+  - node_modules/**/*
+win:
+  target:
+    - nsis
+  icon: assets/icon.png
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+mac:
+  category: public.app-category.utilities
+  icon: assets/icon.icns
+linux:
+  target:
+    - AppImage
+    - deb
+  icon: assets/icon.png
+  category: Utility
